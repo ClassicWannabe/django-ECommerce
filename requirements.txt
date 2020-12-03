@@ -21,5 +21,6 @@ requests==2.25.0
 requests-oauthlib==1.3.0
 six==1.15.0
 sqlparse @ file:///tmp/build/80754af9/sqlparse_1602184451250/work
+stripe==2.55.1
 urllib3==1.26.2
 wincertstore==0.2

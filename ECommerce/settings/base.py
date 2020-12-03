@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'core',
     'django_countries',
+    'stripe',
 ]
 
 MIDDLEWARE = [
