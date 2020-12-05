@@ -6,15 +6,19 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, View
 from django.utils import timezone
-from .models import Item, OrderItem, Order, BillingAddress, Payment, Coupon
-from .forms import CheckoutForm, CouponForm
+from .models import Item, OrderItem, Order, BillingAddress, Payment, Coupon, Refund
+from .forms import CheckoutForm, CouponForm, RefundForm
 
-
+import random
+import string
 import stripe
 stripe.api_key = config('STRIPE_SECRET_KEY')
 
 
 # Create your views here.
+
+def create_ref_code():
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
 
 
 class HomeView(ListView):
@@ -196,6 +200,7 @@ class PaymentView(View):
 
             order.ordered = True
             order.payment = payment
+            order.ref_code = create_ref_code()
             order.save()
             
             messages.success(self.request,'Your order was successful')
@@ -272,3 +277,31 @@ class AddCouponView(View):
 
 def product(request):
     return render(request, 'product-page.html')
+
+class RequestRefundView(View):
+    def get(self,*args,**kwargs):
+        form = RefundForm
+        return render(self.request,'request-refund.html',{'form':form})
+
+    def post(self,*args,**kwargs):
+        form = RefundForm(self.request.POST)
+        if form.is_valid():
+            ref_code = form.cleaned_data['ref_code']
+            message = form.cleaned_data['message']
+            email = form.cleaned_data['email']
+
+            try:
+                order = Order.objects.get(ref_code=ref_code)
+                order.refund_requested = True
+                order.save()
+            
+                refund = Refund(order=order,reason=message,email=email)
+                refund.save()
+
+                messages.info(self.request,'Your request was received')
+
+            except ObjectDoesNotExist:
+                messages.info(self.request, 'This order does not exist')
+            
+            return redirect('core:request-refund_url')
+

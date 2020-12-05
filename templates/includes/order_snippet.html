@@ -19,6 +19,7 @@
     </li>
     {% endfor %}
 
+    {% if order.coupon %}
     <li class="list-group-item d-flex justify-content-between bg-light">
       <div class="text-success">
         <h6 class="my-0">Promo code</h6>
@@ -30,6 +31,7 @@
       <span>Total (USD)</span>
       <strong>${{order.get_total}}</strong>
     </li>
+    {% endif %}
   </ul>
   <!-- Cart -->
 
